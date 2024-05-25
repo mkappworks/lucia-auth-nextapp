@@ -1,13 +1,11 @@
-import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
+import { Pool } from "pg";
+import { NodePgDatabase, drizzle } from "drizzle-orm/node-postgres";
+import * as schema from "./schema";
 
-import pg from "pg";
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { drizzle } from "drizzle-orm/node-postgres";
-
-const pool = new pg.Pool({
+const pool = new Pool({
   connectionString: process.env.DB_URL,
 });
 
-const db = drizzle(pool);
+const db = drizzle(pool, { schema }) as NodePgDatabase<typeof schema>;
 
 export default db;

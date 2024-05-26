@@ -15,16 +15,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { SignUpSchema } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
-import { signUp } from "@/actions/auth.actions";
+import { resendVerificationEmail, signUp } from "@/actions/auth.actions";
+import { useEffect, useState } from "react";
+import { useCountdown } from "usehooks-ts";
 
 export function SignUpForm() {
-  const router = useRouter();
+  const [count, { startCountdown, stopCountdown, resetCountdown }] =
+    useCountdown({
+      countStart: 60,
+      intervalMs: 1000,
+    });
+
+  useEffect(() => {
+    if (count === 0) {
+      stopCountdown();
+      resetCountdown();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count]);
+
+  const [showResendVerificationEmail, setShowResendVerificationEmail] =
+    useState(false);
 
   const form = useForm<z.infer<typeof SignUpSchema>>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
       confirmPassword: "",
     },
@@ -36,65 +52,97 @@ export function SignUpForm() {
       res.errors.forEach((error) => {
         toast({
           variant: "destructive",
-          description: error,
+          description: error.message,
         });
       });
-    }
-
-    if (res.data?.userId) {
+    } else {
       toast({
         variant: "default",
-        description: "Account created successfully",
+        description:
+          "We've sent you an verification email to verify your account.",
       });
-
-      router.push("/");
+      setShowResendVerificationEmail(true);
     }
   }
 
+  const onResendVerificationEmail = async () => {
+    const res = await resendVerificationEmail(form.getValues("email"));
+    if (res.errors.length > 0) {
+      res.errors.forEach((error) => {
+        toast({
+          variant: "destructive",
+          description: error.message,
+        });
+      });
+    } else {
+      toast({
+        variant: "default",
+        description: "Verification email sent successfully",
+      });
+      startCountdown();
+    }
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="enter your username" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />{" "}
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input placeholder="****" type="password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Confirm password</FormLabel>
-              <FormControl>
-                <Input placeholder="****" type="password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Submit</Button>
-      </form>
-    </Form>
+    <>
+      {" "}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="enter your email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />{" "}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input placeholder="****" type="password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm password</FormLabel>
+                <FormControl>
+                  <Input placeholder="****" type="password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </Form>
+      {showResendVerificationEmail && (
+        <Button
+          disabled={count > 0 && count < 60}
+          onClick={onResendVerificationEmail}
+          variant={"link"}
+        >
+          Send verification email {count > 0 && count < 60 && `in ${count}s`}
+        </Button>
+      )}
+    </>
   );
 }

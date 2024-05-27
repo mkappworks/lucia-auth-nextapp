@@ -2,7 +2,8 @@ import { lucia } from "@/lib/auth";
 import { google } from "@/lib/auth/oauth";
 import db from "@/lib/db";
 import { oauthAccountTable, userTable } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { GoogleTokens } from "arctic";
+import { TransactionRollbackError, eq } from "drizzle-orm";
 import { NextApiRequest } from "next";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -48,75 +49,27 @@ export const GET = async (req: NextApiRequest) => {
         { status: 400 }
       );
 
-    const { accessToken, idToken, refreshToken, accessTokenExpiresAt } =
-      await google.validateAuthorizationCode(code, codeVerifier);
+    const googleTokens = await google.validateAuthorizationCode(
+      code,
+      codeVerifier
+    );
 
     const googleResponse = await fetch(
       "https://www.googleapis.com/oauth2/v1/userinfo",
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${googleTokens.accessToken}`,
         },
         method: "GET",
       }
     );
 
-    const googleData = (await googleResponse.json()) as GoogleUser;
+    const googleUser = (await googleResponse.json()) as GoogleUser;
 
-    const { error, data } = await db.transaction(async (trx) => {
-      const existingUser = await trx.query.userTable.findFirst({
-        where: (user) => eq(user.email, googleData.email),
-      });
-
-      if (!existingUser) {
-        const newUser = await trx
-          .insert(userTable)
-          .values({
-            email: googleData.email,
-            id: googleData.id,
-            name: googleData.name,
-            profilePictureUrl: googleData.picture,
-          })
-          .returning({ id: userTable.id });
-
-        if (newUser.length === 0) {
-          trx.rollback();
-          return { error: "Failed to create user" };
-        }
-
-        const createdOAuthAccount = await trx.insert(oauthAccountTable).values({
-          id: googleData.id,
-          accessToken,
-          expiresAt: accessTokenExpiresAt,
-          provider: "google",
-          providerUserId: googleData.id,
-          userId: newUser[0].id,
-        });
-        if (createdOAuthAccount.rowCount === 0) {
-          trx.rollback();
-          return { error: "Failed to create user" };
-        }
-
-        return { data: { userId: newUser[0].id } };
-      } else {
-        const updatedOAuthAccount = await trx
-          .update(oauthAccountTable)
-          .set({
-            accessToken,
-            expiresAt: accessTokenExpiresAt,
-            refreshToken,
-          })
-          .where(eq(oauthAccountTable.id, googleData.id));
-        if (updatedOAuthAccount.rowCount === 0) {
-          trx.rollback();
-          return { error: "Failed to create user" };
-        }
-
-        return { data: { userId: existingUser.id } };
-      }
-    });
-
-    if (error || !data) return Response.json({ error }, { status: 500 });
+    const { data } = await googleAuthDatabaseTransaction(
+      googleUser,
+      googleTokens
+    );
 
     const session = await lucia.createSession(data.userId, {
       expiresIn: 60 * 60 * 24 * 30,
@@ -137,6 +90,84 @@ export const GET = async (req: NextApiRequest) => {
       }
     );
   } catch (error: any) {
+    if (error instanceof TransactionRollbackError) {
+      return Response.json({ error: "Server error" }, { status: 500 });
+    }
     return Response.json({ error }, { status: 500 });
   }
+};
+
+const googleAuthDatabaseTransaction = async (
+  googleUser: GoogleUser,
+  googleTokens: GoogleTokens
+) => {
+  return await db.transaction(async (trx) => {
+    const existingUser = await trx.query.userTable.findFirst({
+      where: (user) => eq(user.email, googleUser.email),
+    });
+
+    return !existingUser
+      ? createUserAndOAuthAccount(trx, googleUser, googleTokens)
+      : updateOAuthAccount(trx, googleUser, googleTokens, existingUser.id);
+  });
+};
+
+const createUserAndOAuthAccount = async (
+  trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  googleUser: GoogleUser,
+  googleTokens: GoogleTokens
+) => {
+  const newUser = await trx
+    .insert(userTable)
+    .values({
+      email: googleUser.email,
+      id: googleUser.id,
+      name: googleUser.name,
+      profilePictureUrl: googleUser.picture,
+    })
+    .returning({ id: userTable.id });
+
+  if (newUser.length === 0) {
+    await trx.rollback();
+    // return { error: "Failed to create user" };
+  }
+
+  const createdOAuthAccount = await trx.insert(oauthAccountTable).values({
+    id: googleUser.id,
+    accessToken: googleTokens.accessToken,
+    expiresAt: googleTokens.accessTokenExpiresAt,
+    provider: "google",
+    providerUserId: googleUser.id,
+    userId: newUser[0].id,
+  });
+
+  if (createdOAuthAccount.rowCount === 0) {
+    await trx.rollback();
+    // return { error: "Failed to create user" };
+  }
+
+  return { data: { userId: newUser[0].id } };
+};
+
+const updateOAuthAccount = async (
+  trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  googleUser: GoogleUser,
+  googleTokens: GoogleTokens,
+  userId: string
+) => {
+  const updatedOAuthAccount = await trx
+    .update(oauthAccountTable)
+    .set({
+      accessToken: googleTokens.accessToken,
+      expiresAt: googleTokens.accessTokenExpiresAt,
+      refreshToken: googleTokens.refreshToken,
+    })
+    .where(eq(oauthAccountTable.id, googleUser.id));
+    
+  if (updatedOAuthAccount.rowCount === 0) {
+    await trx.rollback();
+    // return { error: "Failed to create user" };
+  }
+
+  return { data: { userId } };
 };

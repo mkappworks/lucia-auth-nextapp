@@ -19,7 +19,7 @@ import {
   createGoogleAuthorizationURL,
   resendVerificationEmail,
   signUp,
-} from "@/actions/auth.actions";
+} from "@/server/actions/auth/auth.actions";
 import { useEffect, useState } from "react";
 import { useCountdown } from "usehooks-ts";
 

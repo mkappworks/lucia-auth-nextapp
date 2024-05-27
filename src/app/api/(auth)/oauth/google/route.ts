@@ -83,6 +83,13 @@ export const GET = async (req: NextApiRequest) => {
       sessionCookie.attributes
     );
 
+    cookies().set("state", "", {
+      expires: new Date(0),
+    });
+    cookies().set("codeVerifier", "", {
+      expires: new Date(0),
+    });
+
     return NextResponse.redirect(
       new URL("/dashboard", process.env.NEXT_PUBLIC_BASE_URL),
       {
@@ -163,7 +170,7 @@ const updateOAuthAccount = async (
       refreshToken: googleTokens.refreshToken,
     })
     .where(eq(oauthAccountTable.id, googleUser.id));
-    
+
   if (updatedOAuthAccount.rowCount === 0) {
     await trx.rollback();
     // return { error: "Failed to create user" };

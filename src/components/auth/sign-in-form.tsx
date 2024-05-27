@@ -16,14 +16,13 @@ import { Input } from "@/components/ui/input";
 import { SignInSchema } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import {
-  createGoogleAuthorizationURL,
-  resendVerificationEmail,
-  signIn,
-} from "@/server/actions/auth/auth.actions";
+
 import { useEffect, useState } from "react";
 
 import { useCountdown } from "usehooks-ts";
+import { signIn } from "@/server/actions/auth/sign-in.action";
+import { resendVerificationEmail } from "@/server/actions/auth/resend-verification-email.action";
+import { createGoogleAuthorizationURL } from "@/server/actions/auth/create-google-authorization-url.action";
 
 export function SignInForm() {
   const [showResendVerificationEmail, setShowResendVerificationEmail] =

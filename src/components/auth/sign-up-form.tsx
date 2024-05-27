@@ -15,13 +15,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { SignUpSchema } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import {
-  createGoogleAuthorizationURL,
-  resendVerificationEmail,
-  signUp,
-} from "@/server/actions/auth/auth.actions";
+
 import { useEffect, useState } from "react";
 import { useCountdown } from "usehooks-ts";
+import { resendVerificationEmail } from "@/server/actions/auth/resend-verification-email.action";
+import { signUp } from "@/server/actions/auth/sign-up.action";
+import { createGoogleAuthorizationURL } from "@/server/actions/auth/create-google-authorization-url.action";
 
 export function SignUpForm() {
   const [count, { startCountdown, stopCountdown, resetCountdown }] =

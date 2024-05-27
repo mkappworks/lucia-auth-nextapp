@@ -1,6 +1,6 @@
-import { signOut } from "@/server/actions/auth/auth.actions";
 import { Button } from "@/components/ui/button";
 import { validateRequest } from "@/lib/auth";
+import { signOut } from "@/server/actions/auth/sign-out.action";
 import { redirect } from "next/navigation";
 
 export default async function Home() {

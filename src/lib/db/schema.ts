@@ -1,12 +1,13 @@
 import { relations } from "drizzle-orm";
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { Code } from "lucide-react";
 
 export const userTable = pgTable("user", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
   isEmailVerified: boolean("is_email_verified").notNull().default(false),
   hashedPassword: text("hashed_password"),
+  name: text("name"),
+  profilePictureUrl: text("profile_picture_url"),
 });
 
 export const emailVerificationTable = pgTable("email_verification", {
@@ -48,3 +49,28 @@ export const sessionTableRelations = relations(sessionTable, ({ one }) => ({
     references: [userTable.id],
   }),
 }));
+
+export const oauthAccountTable = pgTable("oauth_account", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => userTable.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  providerUserId: text("provider_user_id").notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  expiresAt: timestamp("expires_at", {
+    withTimezone: true,
+    mode: "date",
+  }).notNull(),
+});
+
+export const oauthAccountTableRelations = relations(
+  oauthAccountTable,
+  ({ one }) => ({
+    user: one(userTable, {
+      fields: [oauthAccountTable.userId],
+      references: [userTable.id],
+    }),
+  })
+);

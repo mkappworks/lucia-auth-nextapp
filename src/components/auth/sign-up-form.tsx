@@ -15,7 +15,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { SignUpSchema } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import { resendVerificationEmail, signUp } from "@/actions/auth.actions";
+import {
+  createGoogleAuthorizationURL,
+  resendVerificationEmail,
+  signUp,
+} from "@/actions/auth.actions";
 import { useEffect, useState } from "react";
 import { useCountdown } from "usehooks-ts";
 
@@ -25,6 +29,7 @@ export function SignUpForm() {
       countStart: 60,
       intervalMs: 1000,
     });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (count === 0) {
@@ -47,6 +52,7 @@ export function SignUpForm() {
   });
 
   async function onSubmit(values: z.infer<typeof SignUpSchema>) {
+    setIsLoading(true);
     const res = await signUp(values);
     if (res.errors.length > 0) {
       res.errors.forEach((error) => {
@@ -63,6 +69,7 @@ export function SignUpForm() {
       });
       setShowResendVerificationEmail(true);
     }
+    setIsLoading(false);
   }
 
   const onResendVerificationEmail = async () => {
@@ -83,60 +90,100 @@ export function SignUpForm() {
     }
   };
 
+  const onGoogleSignUp = async () => {
+    setIsLoading(true);
+    const res = await createGoogleAuthorizationURL();
+    if (res.errors.length > 0) {
+      res.errors.forEach((error) => {
+        toast({
+          variant: "destructive",
+          description: error.message,
+        });
+      });
+    } else if (res.data?.url) {
+      window.location.href = res.data.url;
+    }
+    setIsLoading(false);
+  };
+
   return (
     <>
-      {" "}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="enter your email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />{" "}
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input placeholder="****" type="password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm password</FormLabel>
-                <FormControl>
-                  <Input placeholder="****" type="password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit">Submit</Button>
-        </form>
-      </Form>
+      <>
+        <div className="w-full flex items-center justify-center">
+          <Button
+            disabled={isLoading}
+            variant={"outline"}
+            className="w-full"
+            onClick={onGoogleSignUp}
+          >
+            Sign up with Google
+          </Button>
+        </div>
+        <div className="w-full flex items-center justify-center gap-2">
+          <span className="border-b border-gray-300 w-full"></span>
+          <span className="flex-none">Or sign up with your email</span>
+          <span className="border-b border-gray-300 w-full"></span>
+        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isLoading}
+                      type="email"
+                      placeholder="enter your email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isLoading}
+                      placeholder="****"
+                      type="password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm password</FormLabel>
+                  <FormControl>
+                    <Input placeholder="****" type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button disabled={isLoading} type="submit">
+              Submit
+            </Button>
+          </form>
+        </Form>
+      </>
       {showResendVerificationEmail && (
         <Button
-          disabled={count > 0 && count < 60}
+          disabled={(count > 0 && count < 60) || isLoading}
           onClick={onResendVerificationEmail}
           variant={"link"}
         >

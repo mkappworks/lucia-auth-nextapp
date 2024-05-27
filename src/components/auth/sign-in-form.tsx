@@ -23,6 +23,7 @@ import { useCountdown } from "usehooks-ts";
 import { signIn } from "@/server/actions/auth/sign-in.action";
 import { resendVerificationEmail } from "@/server/actions/auth/resend-verification-email.action";
 import { createGoogleAuthorizationURL } from "@/server/actions/auth/create-google-authorization-url.action";
+import { createGithubAuthorizationURL } from "@/server/actions/auth/create-github-authorization-url.action";
 
 export function SignInForm() {
   const [showResendVerificationEmail, setShowResendVerificationEmail] =
@@ -52,7 +53,7 @@ export function SignInForm() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof SignInSchema>) {
+  const onSubmit = async (values: z.infer<typeof SignInSchema>) => {
     setIsLoading(true);
     const res = await signIn(values);
     if (res.errors.length > 0) {
@@ -74,9 +75,9 @@ export function SignInForm() {
       router.push("/");
     }
     setIsLoading(false);
-  }
+  };
 
-  const onResendVerificationEmail = async () => {
+  const onResendVerificationEmailHandler = async () => {
     const res = await resendVerificationEmail(form.getValues("email"));
     if (res.errors.length > 0) {
       res.errors.forEach((error) => {
@@ -94,9 +95,25 @@ export function SignInForm() {
     }
   };
 
-  const onGoogleSignIn = async () => {
+  const onGoogleSignInHandler = async () => {
     setIsLoading(true);
     const res = await createGoogleAuthorizationURL();
+    if (res.errors.length > 0) {
+      res.errors.forEach((error) => {
+        toast({
+          variant: "destructive",
+          description: error.message,
+        });
+      });
+    } else if (res.data?.url) {
+      window.location.href = res.data.url;
+    }
+    setIsLoading(false);
+  };
+
+  const onGithubSignInHandler = async () => {
+    setIsLoading(true);
+    const res = await createGithubAuthorizationURL();
     if (res.errors.length > 0) {
       res.errors.forEach((error) => {
         toast({
@@ -117,7 +134,17 @@ export function SignInForm() {
           disabled={isLoading}
           variant={"outline"}
           className="w-full"
-          onClick={onGoogleSignIn}
+          onClick={onGithubSignInHandler}
+        >
+          Sign in with Github
+        </Button>
+      </div>
+      <div className="w-full flex items-center justify-center">
+        <Button
+          disabled={isLoading}
+          variant={"outline"}
+          className="w-full"
+          onClick={onGoogleSignInHandler}
         >
           Sign in with Google
         </Button>
@@ -171,7 +198,7 @@ export function SignInForm() {
         {showResendVerificationEmail && (
           <Button
             disabled={count > 0 && count < 60}
-            onClick={onResendVerificationEmail}
+            onClick={onResendVerificationEmailHandler}
             variant={"link"}
           >
             Send verification email {count > 0 && count < 60 && `in ${count}s`}

@@ -4,11 +4,10 @@ import db from "@/lib/db";
 import { oauthAccountTable, userTable } from "@/lib/db/schema";
 import { TransactionRollbackError, eq } from "drizzle-orm";
 import { generateId } from "lucia";
-import { NextApiRequest } from "next";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export const GET = async (req: NextApiRequest) => {
+export const GET = async (req: NextRequest) => {
   try {
     if (!req.url)
       return Response.json(

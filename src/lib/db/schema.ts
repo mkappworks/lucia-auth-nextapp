@@ -1,5 +1,7 @@
 import { relations } from "drizzle-orm";
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+
+export const roleEnum = pgEnum("role", ["user", "admin"]);
 
 export const userTable = pgTable("user", {
   id: text("id").primaryKey(),
@@ -8,6 +10,7 @@ export const userTable = pgTable("user", {
   hashedPassword: text("hashed_password"),
   name: text("name"),
   profilePictureUrl: text("profile_picture_url"),
+  role: roleEnum("role").notNull().default("user"),
 });
 
 export const emailVerificationTable = pgTable("email_verification", {
@@ -50,12 +53,14 @@ export const sessionTableRelations = relations(sessionTable, ({ one }) => ({
   }),
 }));
 
+export const providerEnum = pgEnum("provider", ["google", "github"]);
+
 export const oauthAccountTable = pgTable("oauth_account", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => userTable.id, { onDelete: "cascade" }),
-  provider: text("provider").notNull(),
+  provider: providerEnum("provider").notNull(),
   providerUserId: text("provider_user_id").notNull(),
   accessToken: text("access_token").notNull(),
   refreshToken: text("refresh_token"),

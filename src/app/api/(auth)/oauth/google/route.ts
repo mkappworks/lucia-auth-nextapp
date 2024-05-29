@@ -1,7 +1,7 @@
 import { lucia } from "@/lib/auth";
 import { google } from "@/lib/auth/oauth";
 import db from "@/lib/db";
-import { oauthAccountTable, userTable } from "@/lib/db/schema";
+import { oauthAccounts, users } from "@/lib/db/schema";
 import { GoogleTokens } from "arctic";
 import { TransactionRollbackError, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
@@ -108,7 +108,7 @@ const googleAuthDatabaseTransaction = async (
   googleTokens: GoogleTokens
 ) => {
   return await db.transaction(async (trx) => {
-    const existingUser = await trx.query.userTable.findFirst({
+    const existingUser = await trx.query.users.findFirst({
       where: (user) => eq(user.email, googleUser.email),
     });
 
@@ -124,21 +124,21 @@ const createUserAndOAuthAccount = async (
   googleTokens: GoogleTokens
 ) => {
   const newUser = await trx
-    .insert(userTable)
+    .insert(users)
     .values({
       email: googleUser.email,
       id: googleUser.id,
       name: googleUser.name,
       profilePictureUrl: googleUser.picture,
     })
-    .returning({ id: userTable.id });
+    .returning({ id: users.id });
 
   if (newUser.length === 0) {
     await trx.rollback();
     // return { error: "Failed to create user" };
   }
 
-  const createdOAuthAccount = await trx.insert(oauthAccountTable).values({
+  const createdOAuthAccount = await trx.insert(oauthAccounts).values({
     id: googleUser.id,
     accessToken: googleTokens.accessToken,
     expiresAt: googleTokens.accessTokenExpiresAt,
@@ -162,13 +162,13 @@ const updateOAuthAccount = async (
   userId: string
 ) => {
   const updatedOAuthAccount = await trx
-    .update(oauthAccountTable)
+    .update(oauthAccounts)
     .set({
       accessToken: googleTokens.accessToken,
       expiresAt: googleTokens.accessTokenExpiresAt,
       refreshToken: googleTokens.refreshToken,
     })
-    .where(eq(oauthAccountTable.id, googleUser.id));
+    .where(eq(oauthAccounts.id, googleUser.id));
 
   if (updatedOAuthAccount.rowCount === 0) {
     await trx.rollback();

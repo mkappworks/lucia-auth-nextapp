@@ -21,7 +21,7 @@ export const resendVerificationEmail = async (email: string) => {
   }
 
   try {
-    const existingUser = await db.query.userTable.findFirst({
+    const existingUser = await db.query.users.findFirst({
       where: (user) => eq(user.email, email),
     });
 
@@ -51,7 +51,7 @@ export const resendVerificationEmail = async (email: string) => {
     const code = generateId(6);
 
     const emailVerificationQueryResult =
-      await db.query.emailVerificationTable.findFirst({
+      await db.query.emailVerifications.findFirst({
         where: eq(emailVerifications.userId, userId),
       });
 

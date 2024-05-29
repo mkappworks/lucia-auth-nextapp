@@ -40,7 +40,7 @@ export const signIn = async (
   }
 
   try {
-    const existingUser = await db.query.userTable.findFirst({
+    const existingUser = await db.query.users.findFirst({
       where: (user) => eq(user.email, values.email),
     });
 
@@ -84,7 +84,7 @@ export const signIn = async (
 
     const userId = existingUser.id;
 
-    const existingSession = await db.query.sessionTable.findFirst({
+    const existingSession = await db.query.sessions.findFirst({
       where: (session) => eq(session.userId, userId),
     });
 

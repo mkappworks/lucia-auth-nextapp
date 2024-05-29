@@ -88,7 +88,7 @@ const githubAuthDatabaseTransaction = async (
   accessToken: string
 ) => {
   return await db.transaction(async (trx) => {
-    const existingUser = await trx.query.userTable.findFirst({
+    const existingUser = await trx.query.users.findFirst({
       where: (user) => eq(user.id, githubUser.id),
     });
 

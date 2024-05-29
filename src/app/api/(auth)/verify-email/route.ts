@@ -26,7 +26,7 @@ export const GET = async (req: NextRequest) => {
     };
 
     const emailVerificationQueryResult =
-      await db.query.emailVerificationTable.findFirst({
+      await db.query.emailVerifications.findFirst({
         where:
           eq(emailVerifications.userId, decoded.userId) &&
           eq(emailVerifications.code, decoded.code),

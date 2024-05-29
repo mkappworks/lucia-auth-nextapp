@@ -84,12 +84,6 @@ export const signIn = async (
 
     const userId = existingUser.id;
 
-    const existingSession = await db.query.sessions.findFirst({
-      where: (session) => eq(session.userId, userId),
-    });
-
-    if (existingSession) await lucia.invalidateSession(existingSession.id);
-
     const session = await lucia.createSession(userId, {
       expiresIn: 60 * 60 * 24 * 30,
     });

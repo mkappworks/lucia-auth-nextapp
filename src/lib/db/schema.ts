@@ -11,6 +11,8 @@ export const users = pgTable("users", {
   name: text("name"),
   profilePictureUrl: text("profile_picture_url"),
   role: roleEnum("role").notNull().default("user"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const emailVerifications = pgTable("emailVerifications", {
@@ -28,7 +30,7 @@ export const emailVerifications = pgTable("emailVerifications", {
 export const emailVerificationRelations = relations(
   emailVerifications,
   ({ one }) => ({
-    users: one(users, {
+    user: one(users, {
       fields: [emailVerifications.userId],
       references: [users.id],
     }),
@@ -46,11 +48,8 @@ export const sessions = pgTable("sessions", {
   }).notNull(),
 });
 
-export const sessionRelations = relations(sessions, ({ one }) => ({
-  users: one(users, {
-    fields: [sessions.userId],
-    references: [users.id],
-  }),
+export const sessionRelations = relations(sessions, ({ many }) => ({
+  users: many(sessions),
 }));
 
 export const providerEnum = pgEnum("provider", ["google", "github"]);
@@ -71,7 +70,7 @@ export const oauthAccounts = pgTable("oauthAccounts", {
 });
 
 export const oauthAccountRelations = relations(oauthAccounts, ({ one }) => ({
-  users: one(users, {
+  user: one(users, {
     fields: [oauthAccounts.userId],
     references: [users.id],
   }),

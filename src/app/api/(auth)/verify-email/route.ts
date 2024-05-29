@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import db from "@/lib/db";
-import { emailVerificationTable, userTable } from "@/lib/db/schema";
+import { emailVerifications, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 import { cookies } from "next/headers";
@@ -28,8 +28,8 @@ export const GET = async (req: NextRequest) => {
     const emailVerificationQueryResult =
       await db.query.emailVerificationTable.findFirst({
         where:
-          eq(emailVerificationTable.userId, decoded.userId) &&
-          eq(emailVerificationTable.code, decoded.code),
+          eq(emailVerifications.userId, decoded.userId) &&
+          eq(emailVerifications.code, decoded.code),
       });
 
     if (!emailVerificationQueryResult) {
@@ -37,13 +37,13 @@ export const GET = async (req: NextRequest) => {
     }
 
     await db
-      .delete(emailVerificationTable)
-      .where(eq(emailVerificationTable.userId, decoded.userId));
+      .delete(emailVerifications)
+      .where(eq(emailVerifications.userId, decoded.userId));
 
     await db
-      .update(userTable)
+      .update(users)
       .set({ isEmailVerified: true })
-      .where(eq(userTable.id, decoded.userId));
+      .where(eq(users.id, decoded.userId));
 
     const session = await lucia.createSession(decoded.userId, {
       expiresIn: 60 * 60 * 24 * 30,

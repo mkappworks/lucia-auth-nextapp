@@ -5,7 +5,7 @@ import { z } from "zod";
 import * as argon2 from "argon2";
 import { generateId } from "lucia";
 import db from "@/lib/db";
-import { emailVerificationTable, userTable } from "@/lib/db/schema";
+import { emailVerifications, users } from "@/lib/db/schema";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "@/lib/email";
 import { EmailVerificationTemplate } from "@/components/auth/email-verification-temple";
@@ -46,7 +46,7 @@ export const signUp = async (
   const userId = generateId(15);
 
   try {
-    await db.insert(userTable).values({
+    await db.insert(users).values({
       id: userId,
       email: values.email,
       hashedPassword,
@@ -55,7 +55,7 @@ export const signUp = async (
     //generate a random string for email verification
     const code = generateId(6);
 
-    await db.insert(emailVerificationTable).values({
+    await db.insert(emailVerifications).values({
       id: generateId(15),
       userId,
       code,

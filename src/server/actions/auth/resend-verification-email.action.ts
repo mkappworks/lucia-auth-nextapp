@@ -1,7 +1,7 @@
 "use server";
 
 import db from "@/lib/db";
-import { emailVerificationTable } from "@/lib/db/schema";
+import { emailVerifications } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "@/lib/email";
@@ -52,11 +52,11 @@ export const resendVerificationEmail = async (email: string) => {
 
     const emailVerificationQueryResult =
       await db.query.emailVerificationTable.findFirst({
-        where: eq(emailVerificationTable.userId, userId),
+        where: eq(emailVerifications.userId, userId),
       });
 
     if (!emailVerificationQueryResult) {
-      await db.insert(emailVerificationTable).values({
+      await db.insert(emailVerifications).values({
         id: generateId(15),
         userId,
         code,
@@ -81,9 +81,9 @@ export const resendVerificationEmail = async (email: string) => {
 
     if (emailVerificationQueryResult && shouldSendVerficationEmail) {
       await db
-        .update(emailVerificationTable)
+        .update(emailVerifications)
         .set({ code, createdAt: new Date() })
-        .where(eq(emailVerificationTable.userId, userId));
+        .where(eq(emailVerifications.userId, userId));
     }
 
     const token = jwt.sign(

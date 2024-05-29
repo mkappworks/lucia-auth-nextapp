@@ -1,7 +1,7 @@
 import { lucia } from "@/lib/auth";
 import { github } from "@/lib/auth/oauth";
 import db from "@/lib/db";
-import { oauthAccountTable, userTable } from "@/lib/db/schema";
+import { oauthAccounts, users } from "@/lib/db/schema";
 import { TransactionRollbackError, eq } from "drizzle-orm";
 import { generateId } from "lucia";
 import { cookies } from "next/headers";
@@ -104,20 +104,20 @@ const createUserAndOAuthAccount = async (
   accessToken: string
 ) => {
   const newUser = await trx
-    .insert(userTable)
+    .insert(users)
     .values({
       id: githubUser.id,
       name: githubUser.name,
       profilePictureUrl: githubUser.avatar_url,
     })
-    .returning({ id: userTable.id });
+    .returning({ id: users.id });
 
   if (newUser.length === 0) {
     await trx.rollback();
     // return { error: "Failed to create user" };
   }
 
-  const createdOAuthAccount = await trx.insert(oauthAccountTable).values({
+  const createdOAuthAccount = await trx.insert(oauthAccounts).values({
     id: generateId(15),
     accessToken,
     expiresAt: new Date(),
@@ -141,11 +141,11 @@ const updateOAuthAccount = async (
   userId: string
 ) => {
   const updatedOAuthAccount = await trx
-    .update(oauthAccountTable)
+    .update(oauthAccounts)
     .set({
       accessToken,
     })
-    .where(eq(oauthAccountTable.providerUserId, githubUser.id));
+    .where(eq(oauthAccounts.providerUserId, githubUser.id));
 
   if (updatedOAuthAccount.rowCount === 0) {
     await trx.rollback();

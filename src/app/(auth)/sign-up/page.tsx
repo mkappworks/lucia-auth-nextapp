@@ -1,7 +1,9 @@
-import { SignUpForm } from "@/components/auth/sign-up-form";
-import { validateRequest } from "@/lib/auth";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+
+import { SignUpForm } from "@/components/auth/sign-up-form";
+
+import { validateRequest } from "@/lib/auth";
 
 export default async function SignUpPage() {
   const { user } = await validateRequest();

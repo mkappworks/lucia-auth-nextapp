@@ -1,14 +1,15 @@
 "use server";
 
+import { EmailVerificationTemplate } from "@/components/auth/email-verification-temple";
 import { SignUpSchema } from "@/types";
-import { z } from "zod";
 import * as argon2 from "argon2";
+import jwt from "jsonwebtoken";
 import { generateId } from "lucia";
+import { z } from "zod";
+
 import db from "@/lib/db";
 import { emailVerifications, users } from "@/lib/db/schema";
-import jwt from "jsonwebtoken";
 import { sendEmail } from "@/lib/email";
-import { EmailVerificationTemplate } from "@/components/auth/email-verification-temple";
 
 type SignUpResponse = {
   errors: ErrorMessage[];
@@ -23,7 +24,7 @@ type ErrorMessage = {
 };
 
 export const signUp = async (
-  values: z.infer<typeof SignUpSchema>
+  values: z.infer<typeof SignUpSchema>,
 ): Promise<SignUpResponse> => {
   const validation = SignUpSchema.safeParse({
     email: values.email,
@@ -65,7 +66,7 @@ export const signUp = async (
     const token = jwt.sign(
       { email: values.email, userId, code },
       process.env.JWT_SECRET!,
-      { expiresIn: "5m" }
+      { expiresIn: "5m" },
     );
 
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=${token}`;
@@ -73,7 +74,7 @@ export const signUp = async (
     sendEmail(
       values.email,
       "Account Verification",
-      EmailVerificationTemplate({ email: values.email, url: url })
+      EmailVerificationTemplate({ email: values.email, url: url }),
     );
 
     return {

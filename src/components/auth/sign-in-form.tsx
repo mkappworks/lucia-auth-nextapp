@@ -1,8 +1,8 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,17 +13,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { SignInSchema } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
-
-import { useEffect, useState } from "react";
-
-import { useCountdown } from "usehooks-ts";
-import { signIn } from "@/server/actions/auth/sign-in.action";
-import { resendVerificationEmail } from "@/server/actions/auth/resend-verification-email.action";
-import { createGoogleAuthorizationURL } from "@/server/actions/auth/create-google-authorization-url.action";
 import { createGithubAuthorizationURL } from "@/server/actions/auth/create-github-authorization-url.action";
+import { createGoogleAuthorizationURL } from "@/server/actions/auth/create-google-authorization-url.action";
+import { resendVerificationEmail } from "@/server/actions/auth/resend-verification-email.action";
+import { signIn } from "@/server/actions/auth/sign-in.action";
+import { SignInSchema } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useCountdown } from "usehooks-ts";
+import { z } from "zod";
 
 export function SignInForm() {
   const [showResendVerificationEmail, setShowResendVerificationEmail] =

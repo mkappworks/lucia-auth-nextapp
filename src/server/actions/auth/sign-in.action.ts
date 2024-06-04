@@ -1,12 +1,14 @@
 "use server";
 
-import { SignInSchema } from "@/types";
-import { z } from "zod";
-import * as argon2 from "argon2";
-import db from "@/lib/db";
-import { lucia } from "@/lib/auth";
 import { cookies } from "next/headers";
+
+import { SignInSchema } from "@/types";
+import * as argon2 from "argon2";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
+
+import { lucia } from "@/lib/auth";
+import db from "@/lib/db";
 
 type SignInResponse = {
   errors: ErrorMessage[];
@@ -21,7 +23,7 @@ type ErrorMessage = {
 };
 
 export const signIn = async (
-  values: z.infer<typeof SignInSchema>
+  values: z.infer<typeof SignInSchema>,
 ): Promise<SignInResponse> => {
   const validation = SignInSchema.safeParse({
     email: values.email,
@@ -57,7 +59,7 @@ export const signIn = async (
 
     const isValidPassword = await argon2.verify(
       existingUser.hashedPassword,
-      values.password
+      values.password,
     );
 
     if (!isValidPassword) {
@@ -93,7 +95,7 @@ export const signIn = async (
     cookies().set(
       sessionCookie.name,
       sessionCookie.value,
-      sessionCookie.attributes
+      sessionCookie.attributes,
     );
 
     return {

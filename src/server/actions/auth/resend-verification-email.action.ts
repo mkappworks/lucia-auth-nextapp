@@ -1,12 +1,13 @@
 "use server";
 
-import db from "@/lib/db";
-import { emailVerifications } from "@/lib/db/schema";
+import { EmailVerificationTemplate } from "@/components/auth/email-verification-temple";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
-import { sendEmail } from "@/lib/email";
-import { EmailVerificationTemplate } from "@/components/auth/email-verification-temple";
 import { generateId } from "lucia";
+
+import db from "@/lib/db";
+import { emailVerifications } from "@/lib/db/schema";
+import { sendEmail } from "@/lib/email";
 
 export const resendVerificationEmail = async (email: string) => {
   if (!email) {
@@ -89,7 +90,7 @@ export const resendVerificationEmail = async (email: string) => {
     const token = jwt.sign(
       { email: email, userId: userId, code },
       process.env.JWT_SECRET!,
-      { expiresIn: "5m" }
+      { expiresIn: "5m" },
     );
 
     const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=${token}`;
@@ -97,7 +98,7 @@ export const resendVerificationEmail = async (email: string) => {
     sendEmail(
       email,
       "Account Verification",
-      EmailVerificationTemplate({ email: email, url: url })
+      EmailVerificationTemplate({ email: email, url: url }),
     );
 
     return {

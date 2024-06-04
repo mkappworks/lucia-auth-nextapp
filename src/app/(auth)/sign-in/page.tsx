@@ -1,7 +1,9 @@
-import { SignInForm } from "@/components/auth/sign-in-form";
-import { validateRequest } from "@/lib/auth";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+
+import { SignInForm } from "@/components/auth/sign-in-form";
+
+import { validateRequest } from "@/lib/auth";
 
 export default async function SignInPage() {
   const { user } = await validateRequest();

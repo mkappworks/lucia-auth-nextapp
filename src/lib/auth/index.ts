@@ -1,7 +1,9 @@
-import { Lucia } from "lucia";
-import adapter from "@/lib/auth/adapter";
-import { cookies } from "next/headers";
 import { cache } from "react";
+import { cookies } from "next/headers";
+
+import { Lucia } from "lucia";
+
+import adapter from "@/lib/auth/adapter";
 import { roleEnum } from "@/lib/db/schema";
 
 export const lucia = new Lucia(adapter, {
@@ -34,7 +36,7 @@ export const validateRequest = cache(async () => {
       cookies().set(
         sessionCookie.name,
         sessionCookie.value,
-        sessionCookie.attributes
+        sessionCookie.attributes,
       );
     }
     if (!session) {
@@ -42,7 +44,7 @@ export const validateRequest = cache(async () => {
       cookies().set(
         sessionCookie.name,
         sessionCookie.value,
-        sessionCookie.attributes
+        sessionCookie.attributes,
       );
     }
   } catch {

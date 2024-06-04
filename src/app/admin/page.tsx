@@ -1,5 +1,6 @@
-import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
+
+import { validateRequest } from "@/lib/auth";
 
 export default async function AdminPage() {
   const { user } = await validateRequest();

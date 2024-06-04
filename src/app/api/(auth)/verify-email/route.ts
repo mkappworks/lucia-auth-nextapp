@@ -1,11 +1,12 @@
-import jwt from "jsonwebtoken";
-import db from "@/lib/db";
-import { emailVerifications, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
+
+import { eq } from "drizzle-orm";
+import jwt from "jsonwebtoken";
+
 import { lucia } from "@/lib/auth";
+import db from "@/lib/db";
+import { emailVerifications, users } from "@/lib/db/schema";
 
 export const GET = async (req: NextRequest) => {
   const url = new URL(req.url);
@@ -14,7 +15,7 @@ export const GET = async (req: NextRequest) => {
   if (!token) {
     return Response.redirect(
       new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/sign-in`),
-      302
+      302,
     );
   }
 
@@ -52,7 +53,7 @@ export const GET = async (req: NextRequest) => {
     cookies().set(
       sessionCookie.name,
       sessionCookie.value,
-      sessionCookie.attributes
+      sessionCookie.attributes,
     );
 
     return Response.redirect(new URL(process.env.NEXT_PUBLIC_BASE_URL!), 302);

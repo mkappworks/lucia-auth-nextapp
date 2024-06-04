@@ -1,7 +1,9 @@
 "use server";
 
 import { cookies } from "next/headers";
+
 import { generateState } from "arctic";
+
 import { github } from "@/lib/auth/oauth";
 
 export const createGithubAuthorizationURL = async () => {

@@ -1,7 +1,8 @@
 "use server";
 
-import { lucia, validateRequest } from "@/lib/auth";
 import { cookies } from "next/headers";
+
+import { lucia, validateRequest } from "@/lib/auth";
 
 export const signOut = async () => {
   try {
@@ -25,7 +26,7 @@ export const signOut = async () => {
     cookies().set(
       seesionCookie.name,
       seesionCookie.value,
-      seesionCookie.attributes
+      seesionCookie.attributes,
     );
   } catch (error: any) {
     return {

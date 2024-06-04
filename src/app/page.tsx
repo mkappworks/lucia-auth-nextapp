@@ -1,7 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { validateRequest } from "@/lib/auth";
-import { signOut } from "@/server/actions/auth/sign-out.action";
 import { redirect } from "next/navigation";
+
+import { Button } from "@/components/ui/button";
+import { signOut } from "@/server/actions/auth/sign-out.action";
+
+import { validateRequest } from "@/lib/auth";
 
 export default async function Home() {
   const { user } = await validateRequest();

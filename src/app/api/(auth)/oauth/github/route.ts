@@ -1,11 +1,13 @@
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+
+import { eq, TransactionRollbackError } from "drizzle-orm";
+import { generateId } from "lucia";
+
 import { lucia } from "@/lib/auth";
 import { github } from "@/lib/auth/oauth";
 import db from "@/lib/db";
 import { oauthAccounts, users } from "@/lib/db/schema";
-import { TransactionRollbackError, eq } from "drizzle-orm";
-import { generateId } from "lucia";
-import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
   try {
@@ -13,7 +15,7 @@ export const GET = async (req: NextRequest) => {
       return Response.json(
         { error: "Invalid Request" },
 
-        { status: 400 }
+        { status: 400 },
       );
 
     const url = new URL(req.url);
@@ -25,7 +27,7 @@ export const GET = async (req: NextRequest) => {
       return Response.json(
         { error: "Invalid Request" },
 
-        { status: 400 }
+        { status: 400 },
       );
 
     const savedState = cookies().get("state")?.value;
@@ -34,7 +36,7 @@ export const GET = async (req: NextRequest) => {
       return Response.json(
         { error: "Invalid state" },
 
-        { status: 400 }
+        { status: 400 },
       );
 
     const { accessToken } = await github.validateAuthorizationCode(code);
@@ -50,7 +52,7 @@ export const GET = async (req: NextRequest) => {
 
     const { data } = await githubAuthDatabaseTransaction(
       githubUser,
-      accessToken
+      accessToken,
     );
 
     const session = await lucia.createSession(data.userId, {
@@ -62,7 +64,7 @@ export const GET = async (req: NextRequest) => {
     cookies().set(
       sessionCookie.name,
       sessionCookie.value,
-      sessionCookie.attributes
+      sessionCookie.attributes,
     );
 
     cookies().set("state", "", {
@@ -73,7 +75,7 @@ export const GET = async (req: NextRequest) => {
       new URL("/dashboard", process.env.NEXT_PUBLIC_BASE_URL),
       {
         status: 302,
-      }
+      },
     );
   } catch (error: any) {
     if (error instanceof TransactionRollbackError) {
@@ -85,7 +87,7 @@ export const GET = async (req: NextRequest) => {
 
 const githubAuthDatabaseTransaction = async (
   githubUser: any,
-  accessToken: string
+  accessToken: string,
 ) => {
   return await db.transaction(async (trx) => {
     const existingUser = await trx.query.users.findFirst({
@@ -101,7 +103,7 @@ const githubAuthDatabaseTransaction = async (
 const createUserAndOAuthAccount = async (
   trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   githubUser: any,
-  accessToken: string
+  accessToken: string,
 ) => {
   const newUser = await trx
     .insert(users)
@@ -138,7 +140,7 @@ const updateOAuthAccount = async (
   trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   githubUser: any,
   accessToken: string,
-  userId: string
+  userId: string,
 ) => {
   const updatedOAuthAccount = await trx
     .update(oauthAccounts)

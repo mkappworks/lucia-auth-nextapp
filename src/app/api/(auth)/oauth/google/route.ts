@@ -1,11 +1,13 @@
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+
+import { GoogleTokens } from "arctic";
+import { eq, TransactionRollbackError } from "drizzle-orm";
+
 import { lucia } from "@/lib/auth";
 import { google } from "@/lib/auth/oauth";
 import db from "@/lib/db";
 import { oauthAccounts, users } from "@/lib/db/schema";
-import { GoogleTokens } from "arctic";
-import { TransactionRollbackError, eq } from "drizzle-orm";
-import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
 
 interface GoogleUser {
   id: string;
@@ -23,7 +25,7 @@ export const GET = async (req: NextRequest) => {
       return Response.json(
         { error: "Invalid Request" },
 
-        { status: 400 }
+        { status: 400 },
       );
 
     const url = new URL(req.url);
@@ -35,7 +37,7 @@ export const GET = async (req: NextRequest) => {
       return Response.json(
         { error: "Invalid Request" },
 
-        { status: 400 }
+        { status: 400 },
       );
 
     const codeVerifier = cookies().get("code_verifier")?.value;
@@ -45,12 +47,12 @@ export const GET = async (req: NextRequest) => {
       return Response.json(
         { error: "Invalid state" },
 
-        { status: 400 }
+        { status: 400 },
       );
 
     const googleTokens = await google.validateAuthorizationCode(
       code,
-      codeVerifier
+      codeVerifier,
     );
 
     const googleResponse = await fetch(
@@ -60,14 +62,14 @@ export const GET = async (req: NextRequest) => {
           Authorization: `Bearer ${googleTokens.accessToken}`,
         },
         method: "GET",
-      }
+      },
     );
 
     const googleUser = (await googleResponse.json()) as GoogleUser;
 
     const { data } = await googleAuthDatabaseTransaction(
       googleUser,
-      googleTokens
+      googleTokens,
     );
 
     const session = await lucia.createSession(data.userId, {
@@ -79,7 +81,7 @@ export const GET = async (req: NextRequest) => {
     cookies().set(
       sessionCookie.name,
       sessionCookie.value,
-      sessionCookie.attributes
+      sessionCookie.attributes,
     );
 
     cookies().set("state", "", {
@@ -93,7 +95,7 @@ export const GET = async (req: NextRequest) => {
       new URL("/dashboard", process.env.NEXT_PUBLIC_BASE_URL),
       {
         status: 302,
-      }
+      },
     );
   } catch (error: any) {
     if (error instanceof TransactionRollbackError) {
@@ -105,7 +107,7 @@ export const GET = async (req: NextRequest) => {
 
 const googleAuthDatabaseTransaction = async (
   googleUser: GoogleUser,
-  googleTokens: GoogleTokens
+  googleTokens: GoogleTokens,
 ) => {
   return await db.transaction(async (trx) => {
     const existingUser = await trx.query.users.findFirst({
@@ -121,7 +123,7 @@ const googleAuthDatabaseTransaction = async (
 const createUserAndOAuthAccount = async (
   trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   googleUser: GoogleUser,
-  googleTokens: GoogleTokens
+  googleTokens: GoogleTokens,
 ) => {
   const newUser = await trx
     .insert(users)
@@ -159,7 +161,7 @@ const updateOAuthAccount = async (
   trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   googleUser: GoogleUser,
   googleTokens: GoogleTokens,
-  userId: string
+  userId: string,
 ) => {
   const updatedOAuthAccount = await trx
     .update(oauthAccounts)

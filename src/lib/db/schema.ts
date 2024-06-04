@@ -34,7 +34,7 @@ export const emailVerificationRelations = relations(
       fields: [emailVerifications.userId],
       references: [users.id],
     }),
-  })
+  }),
 );
 
 export const sessions = pgTable("sessions", {

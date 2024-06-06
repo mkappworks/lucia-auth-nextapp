@@ -128,7 +128,7 @@ export function SignInForm() {
 
   return (
     <>
-      <div className="w-full flex items-center justify-center">
+      <div className="flex w-full items-center justify-center">
         <Button
           disabled={isLoading}
           variant={"outline"}
@@ -138,7 +138,7 @@ export function SignInForm() {
           Sign in with Github
         </Button>
       </div>
-      <div className="w-full flex items-center justify-center">
+      <div className="flex w-full items-center justify-center">
         <Button
           disabled={isLoading}
           variant={"outline"}
@@ -148,10 +148,10 @@ export function SignInForm() {
           Sign in with Google
         </Button>
       </div>
-      <div className="w-full flex items-center justify-center gap-2">
-        <span className="border-b border-gray-300 w-full"></span>
+      <div className="flex w-full items-center justify-center gap-2">
+        <span className="w-full border-b border-gray-300"></span>
         <span className="flex-none">Or sign in with your email</span>
-        <span className="border-b border-gray-300 w-full"></span>
+        <span className="w-full border-b border-gray-300"></span>
       </div>
 
       <Form {...form}>

@@ -108,7 +108,7 @@ export function SignUpForm() {
   return (
     <>
       <>
-        <div className="w-full flex items-center justify-center">
+        <div className="flex w-full items-center justify-center">
           <Button
             disabled={isLoading}
             variant={"outline"}
@@ -118,10 +118,10 @@ export function SignUpForm() {
             Sign up with Google
           </Button>
         </div>
-        <div className="w-full flex items-center justify-center gap-2">
-          <span className="border-b border-gray-300 w-full"></span>
+        <div className="flex w-full items-center justify-center gap-2">
+          <span className="w-full border-b border-gray-300"></span>
           <span className="flex-none">Or sign up with your email</span>
-          <span className="border-b border-gray-300 w-full"></span>
+          <span className="w-full border-b border-gray-300"></span>
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
